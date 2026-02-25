@@ -102,8 +102,11 @@
                         console.warn("[MEP] No grade found for block:", block);
                         continue;
                     }
-                    if (block.grade !== 'A' && block.grade !== 'B' && block.grade !== 'C' && block.grade !== 'D' && block.grade !== 'E') {
+                    if (block.grade !== 'A' && block.grade !== 'B' && block.grade !== 'C' && block.grade !== 'D' && block.grade !== 'E' && block.grade !== 'Fail') {
                         continue;
+                    }
+                    if (block.grade === 'Fail') {
+                        block.grade = 'E';
                     }
                     grades_dico[title.trim()] = block.grade;
                 }
