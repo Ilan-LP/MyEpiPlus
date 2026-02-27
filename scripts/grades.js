@@ -37,8 +37,9 @@
                         return;
                     }
 
+                    const data = await res.json();
                     clearInterval(interval);
-                    resolve(token);
+                    resolve({ token, semester: data.semester });
                 } catch (err) {
                     console.warn("[MEP] Network error while fetching token:", err);
                 }
@@ -46,27 +47,8 @@
         });
     }
 
-    async function createDico() {
+    async function createDico({ token, semester }) {
         const dico = {};
-        const account = JSON.parse(localStorage.getItem("@account") || "{}");
-        if (!account.token) {
-            console.warn("[MEP] Not token found in localStorage, cannot fetch grades");
-            return dico;
-        }
-        const token = account.token;
-        const response = await fetch(BASE_URL + SEMESTER_URL, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            }
-        });
-        if (!response.ok) {
-            console.warn("[MEP] Error while fetching semester info", response.status);
-            return dico;
-        }
-        const data = await response.json();
-        const semester = data.semester;
 
         const grades_dico = {};
         for (const url of TARGET_URL) {
@@ -93,7 +75,8 @@
                     continue;
                 }
                 for (const block of json[blockName]) {  
-                    const title = block.title || block.blockTitle || block.name || "";
+                    const title = block.title || block.blockTitle || block.name || "" ;
+                    const titleFr = block.titleFr || block.blockTitleFr || "";
                     if (!title) {
                         console.warn("[MEP] No title found for block:", block);
                         continue;
@@ -109,14 +92,15 @@
                         block.grade = 'E';
                     }
                     grades_dico[title.trim()] = block.grade;
+                    grades_dico[titleFr.trim()] = block.grade;
                 }
             }
         }
         return grades_dico;
     }
 
-    waitForToken().then(async () => {
-        const dico = await createDico();
+    waitForToken().then(async (tokenData) => {
+        const dico = await createDico(tokenData);
         blocksData = dico
         tryReplace();
     });
